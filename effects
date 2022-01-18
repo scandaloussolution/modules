@@ -101,14 +101,4 @@ function effects.burstfade(a,col,size,size2,lt,fade)
 	effects.debris(part,lt + fade)
 end
 
-local r = Instance.new("RemoteEvent",owner.Character)
-NLS([[local m = owner:GetMouse()
-while true do
-task.wait(0.1)
-script.Parent:FireServer(m.Hit)end]],r)
-
-r.OnServerEvent:connect(function(p,h)
-	effects.burst(h,Color3.new(1,0,0),Vector3.new(1,1,1),Vector3.new(4,4,4),0.5)
-	effects.beams(h,Color3.new(0,1,0),6,Vector3.new(0.3,0.3,1),Vector3.new(0.3,0.3,1.5),0.5)
-	effects.strike(h + Vector3.new(0,15,0),h,Color3.new(0,0,1),0.4,0.6,2,1,1)
-end)
+return effects
