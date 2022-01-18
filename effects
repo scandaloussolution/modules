@@ -1,0 +1,114 @@
+local effects = {
+	rand = Random.new();
+	prt = Instance.new("Part");
+	tws = game:GetService("TweenService");
+	debris = function(part,lt) task.delay(lt,game.Destroy,part) end;
+	sphere = Instance.new("SpecialMesh")
+}
+effects.sphere.MeshType = "Sphere"
+function effects.quadBezier(t, p0, p1, p2)
+	return (1 - t)^2 * p0 + 2 * (1 - t) * t * p1 + t^2 * p2
+end
+function effects.getpart()
+	local p = effects.prt:Clone()
+	p.CanCollide = false 
+	p.CanTouch = false 
+	p.CanQuery =false 
+	p.Locked = true 
+	p.Anchored = true
+	p.Parent = script
+	return p
+end
+function effects.random(a,b)
+	return effects.rand:NextNumber(a,b)
+end
+function effects.randomangle(a,b)
+	return CFrame.Angles(math.rad(effects.random(a,b)),math.rad(effects.random(a,b)),math.rad(effects.random(a,b)))
+end
+function effects.strike(a,b,col,thick,rough,res,lt,t)
+	local points = {}
+	local mag = math.round((a.Position - b.Position).Magnitude/res)
+	for i = 0,mag do
+		points[i] = a:Lerp(b,i/mag) * CFrame.new((i < mag and i > 0) and effects.random(-rough,rough) or 0,(i < mag and i > 0) and effects.random(-rough,rough) or 0,0)
+	end
+	for i,v in pairs(points)do 
+		local nxt = points[i + 1]
+		if nxt then
+			local mag = (v.Position - nxt.Position).Magnitude
+			local part = effects.getpart()
+			part.Material = Enum.Material.Neon
+			part.Color = col
+			part.Size = Vector3.new(0,0,mag)
+			part.CFrame = CFrame.new(v.Position,nxt.Position) * CFrame.new(0,0,-mag/2)
+			effects.tws:Create(part,TweenInfo.new(lt/2,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size = Vector3.new(thick,thick,mag)}):Play()
+
+			task.delay((i/10) * t,function()
+				effects.tws:Create(part,TweenInfo.new(lt),{ Transparency = 1}):Play()
+				effects.debris(part,lt)
+			end)
+		end
+	end
+end
+function effects.beams(a,col,range,size,size2,lt)
+	local part = effects.getpart()
+	part.Material = Enum.Material.Neon
+	part.Color = col
+	part.Size = size 
+	part.CFrame = a * effects.randomangle(-360,360)
+	local mesh = effects.sphere:Clone()
+	mesh.Parent = part 
+	effects.tws:Create(part,TweenInfo.new(lt),{Transparency = 1, Size = size2, CFrame = part.CFrame * CFrame.new(0,0,-range)}):Play()
+	effects.debris(part,lt)
+end
+function effects.beamfade(a,col,range,size,size2,lt,fade)
+	local part = effects.getpart()
+	part.Material = Enum.Material.Neon
+	part.Color = col
+	part.Size = size 
+	part.CFrame = a * effects.randomangle(-360,360)
+	local mesh = effects.sphere:Clone()
+	mesh.Parent = part 
+	effects.tws:Create(part,TweenInfo.new(lt),{Size = size2, CFrame = part.CFrame * CFrame.new(0,0,-range)}):Play()
+	task.delay(lt,function()
+		effects.tws:Create(part,TweenInfo.new(lt),{Transparency = 1}):Play()
+	end)
+	effects.debris(part,lt + fade)
+end
+function effects.burst(a,col,size,size2,lt)
+	local part = effects.getpart()
+	part.Material = Enum.Material.Neon
+	part.Color = col
+	part.Size = size 
+	part.CFrame = a
+	local mesh = effects.sphere:Clone()
+	mesh.Parent = part 
+	effects.tws:Create(part,TweenInfo.new(lt),{Transparency = 1, Size = size2}):Play()
+	effects.debris(part,lt)
+
+end
+function effects.burstfade(a,col,size,size2,lt,fade)
+	local part = effects.getpart()
+	part.Material = Enum.Material.Neon
+	part.Color = col
+	part.Size = size 
+	part.CFrame = a
+	local mesh = effects.sphere:Clone()
+	mesh.Parent = part 
+	effects.tws:Create(part,TweenInfo.new(lt),{Size = size2}):Play()
+	task.delay(lt,function()
+		effects.tws:Create(part,TweenInfo.new(lt),{Transparency = 1}):Play()
+	end)
+	effects.debris(part,lt + fade)
+end
+
+local r = Instance.new("RemoteEvent",owner.Character)
+NLS([[local m = owner:GetMouse()
+while true do
+task.wait(0.1)
+script.Parent:FireServer(m.Hit)end]],r)
+
+r.OnServerEvent:connect(function(p,h)
+	effects.burst(h,Color3.new(1,0,0),Vector3.new(1,1,1),Vector3.new(4,4,4),0.5)
+	effects.beams(h,Color3.new(0,1,0),6,Vector3.new(0.3,0.3,1),Vector3.new(0.3,0.3,1.5),0.5)
+	effects.strike(h + Vector3.new(0,15,0),h,Color3.new(0,0,1),0.4,0.6,2,1,1)
+end)
