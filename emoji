@@ -1649,10 +1649,5 @@ local EmojiList = {
 	{":flag_eng:", "🏴󠁧󠁢󠁥󠁮󠁧󠁿"}
 }
 
-for i, v in ipairs(EmojiList) do
-	if type(v) ~= "string" then
-		EmojiList[v[1]] = v[2]
-	end
-end
 
 return EmojiList
